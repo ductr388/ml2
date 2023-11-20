@@ -1,5 +1,6 @@
 library(tree)
 library(knitr)
+library(ggplot2)
 # Questions                                         ####
 
 # General: Does not say which variables to use, so use all but change categorical variables to factor?
@@ -157,4 +158,44 @@ f_score <- 2 * (precision*recall) / (precision + recall)
 f_score
 # 2.5                                               ####
 
-?tree
+# This does not work to prune the tree afterwards?
+# Assuming the loss matrix should look like this:
+# TP  FP
+# FN  TN
+loss_mat <- matrix(c(0, 1, 5 ,0),ncol=2)
+loss_mat
+
+tree_loss <- prune.misclass(fit,loss=loss_mat,best=29)
+pred_loss <- predict(tree_loss, newdata=test, type="class")
+table_loss <- table(test$y, pred_loss)
+table_test
+table_loss
+
+# 2.6                                               ####
+
+
+model_logistic <- glm(y~., family="binomial", train)
+pred_logistic <- predict(model_logistic, test, type="response")
+d <- data.frame(TPR = 1, FPR = 1)
+
+probs <- seq(from=0.05, to=0.95, by=0.05)
+roc_logistic <- d[FALSE, ]
+
+for(i in 1:length(probs)){
+  pred <- ifelse(pred_logistic > probs[i], "yes", "no")
+  conf_mat <- table(test$y, pred)
+  TP <- conf_mat[2,2]
+  TN <- conf_mat[1,1]
+  FN <- conf_mat[2,1]
+  FP <- conf_mat[1,2]
+  
+  # TPR, true positive rate
+  roc_logistic[i,1] <- TP / (TP+FN)
+  # FPR, false positive rate
+  roc_logistic[i,2] <- TN / (TN+FP)
+}
+plot_data <- data.frame(roc_logistic)
+ggplot(plot_data) +
+  geom_point(aes(x=FPR, y=TPR)) +
+  scale_x_continuous(limits=c(0,1)) +
+  theme_bw()
