@@ -17,6 +17,7 @@ data <- read.csv2("bank-full.csv")
 # Change categorical variables to categorical
 index_cat <- c(2,3,4,5,7,8,9,10,11,16,17)
 data[ ,index_cat] <- lapply(data[ ,index_cat], as.factor)
+data <- data[,-12]
 
 n=dim(data)[1]
 set.seed(12345)
@@ -121,9 +122,9 @@ which(min(testScore[2:50]) == testScore[2:50])+1
 plot(2:50, trainScore[2:50], type="b", col="red",ylim=c(4000,12000))
 points(2:50, testScore[2:50], type="b", col="blue")
 # Fill the point with the min value on validation
-points(29, testScore[29], pch=16, col="blue")
+points(22, testScore[29], pch=16, col="blue")
 
-best_fit <- prune.tree(fit, best=29)
+best_fit <- prune.tree(fit, best=22)
 plot(best_fit)
 text(best_fit, pretty=0)
 
