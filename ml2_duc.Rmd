@@ -6,12 +6,9 @@ author:
 - William Wiik
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
-  pdf_document:
+    bookdown::pdf_document2: default
     fig_caption: yes
     number_sections: yes
-  word_document: default
-  html_document:
-    df_print: paged
 geometry: top=100pt,bottom=100pt,left=68pt,right=66pt
 subtitle: 732A99
 header-includes:
@@ -55,7 +52,6 @@ header-includes:
 
 <!-- Skapar en innehållsförteckning och anger djupet av rubrikerna som ska visas -->
 \setcounter{tocdepth}{3}
-\tableofcontents
 
 <!-- Anger sidbrytning -->
 \clearpage
@@ -70,6 +66,8 @@ header-includes:
 library(ggplot2)
 library(tree)
 library(knitr)
+library(dplyr)
+library(kableExtra)
 knitr::opts_chunk$set(
   echo = TRUE, 
   fig.width = 4.5, 
@@ -140,9 +138,9 @@ deviance and node size affected the size of the trees and explain why.
 
 The default setting in tree for smallest allowed node size is 10 and the default
 for minimum deviance is 0.01. The three different trees are fitted and in table 
-\ref{tab:tree}
+\@ref(tab:tree).
 
-```{r tree, fig.height=4.5, fig.cap = "\\label{tab:tree}Decision tree fitted with default settings."}
+```{r tree, fig.height=4.5, fig.cap = "\\label{}Decision tree fitted with default settings."}
 # Tree a: default setting
 tree_a <- tree(y ~., data=train)
 # Misclassification for training data for tree a
@@ -199,11 +197,11 @@ colnames(table) <- c("Training error", "Validation error", "Number of leaves")
 rownames(table) <- c("Tree a: default setting", "Tree b: smallest node 7000", 
                      "Tree c: min deviance 0.0005")
 
-kable(table, digits=6, label="tree",
-      caption="Misclassification error for the three trees on training and validation data.")
+kable(table, digits=6, booktabs=T,
+      caption="Misclassification error for the three trees on training and validation data.") 
 ```
 
-From table \ref{tab:tree}, the training error and validation error for tree a 
+From table \@ref(tab:tree), the training error and validation error for tree a 
 and b are the same, however there is a difference in number of leaves where tree 
 a has one more leaf. In tree b, the minimum node size is changed to 7 000 from 10
 which forces the tree to have least 7 000 observations in each node. The 
@@ -213,10 +211,10 @@ than 7 000 and thus the tree will have less leaves.
 Training error is lowest for tree c, but the validation error
 is also highest for tree c. This indicates that tree c is more overfitted on 
 training data compared to the tree a and b. The difference for tree c is that 
-minimum deviance is changed from 0.01 to0.0005. Minimum deviance is how much 
-within-node deviance must be at least for a node to be able to split. 
-By having a smaller number, the nodes can have smaller deviance and still be 
-able split. This allows the tree to have more leaves. 
+minimum deviance is changed from 0.01 to 0.0005. Minimum deviance is how much 
+within-node deviance a node have to have compared to the root node to be able to
+split. By having a smaller number, the tree is allowed to split nodes with smaller 
+deviance, which in turns allows the tree to grow and have smaller nodes than before.
 
 Amongst tree a, b, and c the model b is best since it has lowest validation error
 but also has the least amounts of leaves. By having less leaves the model is less
@@ -280,7 +278,12 @@ text(best_fit, pretty=0)
 
 ## 2.4
 
-**Question:**
+**Question:** Estimate the confusion matrix, accuracy and F1 score for the test data by
+using the optimal model from step 3. Comment whether the model has a
+good predictive power and which of the measures (accuracy or F1-score)
+should be preferred here. 
+
+
 **Answer:**
 
 ## 2.5
