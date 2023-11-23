@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.11.10)  22 NOV 2023 11:13
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.11.10)  22 NOV 2023 20:49
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -574,26 +574,26 @@ File: t1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <10> not available
 (Font)              Font shape `T1/lmtt/b/n' tried instead on input line 189.
-LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 214.
+LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 216.
 (c:/Users/Duc/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/lm/ts1lmr.fd
 File: ts1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 ) [1
 
 {c:/Users/Duc/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ts1.enc}]
 
-LaTeX Warning: Reference `tab:tree' on page 2 undefined on input line 240.
+LaTeX Warning: Reference `tab:tree' on page 2 undefined on input line 242.
 
 [2
 
 ]
 
-LaTeX Warning: Reference `tab:tree' on page 3 undefined on input line 341.
+LaTeX Warning: Reference `tab:tree' on page 3 undefined on input line 343.
 
 [3]
 <ml2_duc_files/figure-latex/unnamed-chunk-4-1.pdf, id=97, 433.62pt x 325.215pt>
 File: ml2_duc_files/figure-latex/unnamed-chunk-4-1.pdf Graphic file (type pdf)
 <use ml2_duc_files/figure-latex/unnamed-chunk-4-1.pdf>
-Package pdftex.def Info: ml2_duc_files/figure-latex/unnamed-chunk-4-1.pdf  used on input line 420.
+Package pdftex.def Info: ml2_duc_files/figure-latex/unnamed-chunk-4-1.pdf  used on input line 422.
 (pdftex.def)             Requested size: 433.63878pt x 325.22908pt.
 [4
 
@@ -601,16 +601,16 @@ Package pdftex.def Info: ml2_duc_files/figure-latex/unnamed-chunk-4-1.pdf  used 
 <ml2_duc_files/figure-latex/unnamed-chunk-5-1.pdf, id=103, 722.7pt x 722.7pt>
 File: ml2_duc_files/figure-latex/unnamed-chunk-5-1.pdf Graphic file (type pdf)
 <use ml2_duc_files/figure-latex/unnamed-chunk-5-1.pdf>
-Package pdftex.def Info: ml2_duc_files/figure-latex/unnamed-chunk-5-1.pdf  used on input line 432.
+Package pdftex.def Info: ml2_duc_files/figure-latex/unnamed-chunk-5-1.pdf  used on input line 434.
 (pdftex.def)             Requested size: 480.29172pt x 480.29172pt.
 [5 <./ml2_duc_files/figure-latex/unnamed-chunk-4-1.pdf>] [6 <./ml2_duc_files/figure-latex/unnamed-chunk-5-1.pdf>] [7] [8
 
 ]
-Underfull \vbox (badness 10000) detected at line 587
+Underfull \vbox (badness 10000) detected at line 591
  []
 
 
-Overfull \vbox (0.19675pt too high) detected at line 587
+Underfull \vbox (badness 10000) detected at line 591
  []
 
 [9] [10] (./ml2_duc.aux)
@@ -633,7 +633,7 @@ Here is how much of TeX's memory you used:
  14 hyphenation exceptions out of 8191
  75i,12n,79p,472b,496s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <c:/Users/Duc/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx10.pfb><c:/Users/Duc/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx12.pfb><c:/Users/Duc/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr10.pfb><c:/Users/Duc/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr12.pfb><c:/Users/Duc/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtk10.pfb><c:/Users/Duc/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtt10.pfb><c:/Users/Duc/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtti10.pfb>
-Output written on ml2_duc.pdf (12 pages, 223175 bytes).
+Output written on ml2_duc.pdf (12 pages, 223268 bytes).
 PDF statistics:
  195 PDF objects out of 1000 (max. 8388607)
  160 compressed objects within 2 object streams

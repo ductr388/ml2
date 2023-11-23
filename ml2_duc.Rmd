@@ -105,11 +105,13 @@ n=dim(data)[1]
 set.seed(12345)
 id=sample(1:n, floor(n*0.4))
 train=data[id,]
+
 # Validation data
 id1=setdiff(1:n, id)
 set.seed(12345)
 id2=sample(id1, floor(n*0.3))
 valid=data[id2,]
+
 # Test data
 id3=setdiff(id1,id2)
 test=data[id3,] 
