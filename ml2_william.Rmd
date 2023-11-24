@@ -6,12 +6,12 @@ author:
 - William Wiik
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
+  html_document:
+    df_print: paged
+  word_document: default
   pdf_document:
     fig_caption: yes
     number_sections: yes
-  word_document: default
-  html_document:
-    df_print: paged
 geometry: top=100pt,bottom=100pt,left=68pt,right=66pt
 subtitle: 732A99
 header-includes:
@@ -208,11 +208,13 @@ library(glmnet)
 
 set.seed(12345) 
 
+# Asked lab assistents if we would scale the data
+# They said no
 
-scaler <- preProcess(tecator_train)
-data1 <- predict(scaler, tecator_train)
-covariates <- data1[,2:101]
-response <- data1[, 102]
+# scaler <- preProcess(tecator_train)
+# data1 <- predict(scaler, tecator_train)
+covariates <- tecator_train[,2:101]
+response <- tecator_train[, 102]
 
 model_lasso <- glmnet(as.matrix(covariates),response, alpha = 1,
                       family="gaussian")
@@ -220,20 +222,20 @@ model_lasso <- glmnet(as.matrix(covariates),response, alpha = 1,
 plot(model_lasso, xvar="lambda", label=TRUE)
 
 # print(model_lasso)
-n_features <- 3
-index <- which(model_lasso$df == (n_features + 1))[1]
-value_penalty_factor <- model_lasso$lambda[index]
-
-
-coef(model_lasso, s = value_penalty_factor)
+# n_features <- 3
+# index <- which(model_lasso$df == (n_features + 1))[1]
+# value_penalty_factor <- model_lasso$lambda[index]
+# 
+# 
+# coef(model_lasso, s = value_penalty_factor)
 
 
 ```
 
 In figure X, the penalty factor $log(\lambda)$ and the coefficients for the features are plotted.
 As $log(\lambda)$ gets higher the more coefficients reach to zero.
-If the penalty factor $log(\lambda)$ is higher than -2.5, then the model select only one feature.
-If we want to select a model with only three features, then we would have a $log(\lambda)$ equal to 
+If the penalty factor $log(\lambda)$ is higher than 0, then the model select only one feature.
+If we want to select a model with only three features, then we would have a $log(\lambda)$ equal to around -0.3, then the $\lambda$ value would be $exp(-0.3) = 0.74$.
 
 
 
@@ -256,6 +258,8 @@ model_ridge <- glmnet(as.matrix(covariates), response, alpha = 0,
 plot(model_ridge, xvar="lambda", label=TRUE)
 
 ```
+In this plot none of the coefficients reach to zero, but all coefficients instead converge 
+to zero. In figure X, the LASSO do feature selection depending on the the $log(\lambda)$, however in this figure with Ridge it does not do feature selection.
 
 
 
@@ -265,6 +269,7 @@ plot(model_ridge, xvar="lambda", label=TRUE)
 **Question:**
 
 Use cross-validation with default number of folds to compute the optimal LASSO model. Present a plot showing the dependence of the CV score on log $\lambda$ and comment how the CV score changes with log $\lambda$. Report the optimal $\lambda$ and how many variables were chosen in this model.
+Does the information displayed in the plot suggests that the optimal $\lambda$ value results in a statistically significantly better prediction than log $\lambda$ = -4?
 
 **Answer:** 
 
@@ -273,7 +278,6 @@ Use cross-validation with default number of folds to compute the optimal LASSO m
 
 model_lasso_cv <- cv.glmnet(as.matrix(covariates),response, alpha = 1,
                    family = "gaussian")
-model_lasso_cv$lambda.min
 plot(model_lasso_cv)
 coef_cv <- coef(model_lasso_cv, s="lambda.min")
 
@@ -289,20 +293,17 @@ value <- coef_cv@x
 df <- data.frame("Variables" = variables, "Coefficient" = value)
 
 knitr::kable(df, row.names = FALSE,
-             caption = "Variables that were chosen in this LASSO model",digits = 3)
+             caption = "Variables that were chosen in this LASSO model",digits = 5)
+
+model_lasso_cv$lambda.min
 
 ```
 
 
-
-**Question:**
-
-Does the information displayed in the plot suggests that the optimal $\lambda$ value results in a statistically significantly better prediction than log $\lambda$ = -4?
+For $log(\lambda)$ values ranging from -5 to -2.5, the Mean Squared Error (MSE) remains constant. However, there is a notable increase in MSE when $log(\lambda)$ reaches 0. Then, as $log(\lambda)$ increases further, the MSE gradual increase. Table X displays the selected variables for this model by its corresponding coefficient. In total, eight variables were included. The optimal value for $\lambda$ is determined to be $log(-2.857) =$ 0.06.
+The plot suggest that the optimal $\lambda$ value does not results in a statistically significantly better prediction than $log(\lambda)$ = -4, because they have around the same MSE.
 
 
-**Answer:** 
-
-no
 
 
 
@@ -310,13 +311,10 @@ no
 
 Finally, create a scatter plot of the original test versus predicted test values for the model corresponding to optimal lambda and comment whether the model predictions are good.
 
-
-
 **Answer:** 
 
 ```{r}
 
-## WARNING, NEED TO UNSCALE SOMEHOW ?????????
 
 
 library(ggplot2)
@@ -328,12 +326,17 @@ ynew <- predict(model_lasso_cv, newx = as.matrix(tecator_test[, 2:101]),
 
 ggplot(data.frame(y,ynew), aes(y, lambda.1se)) + geom_point() + theme_bw() +
   labs(x = "True Y",
-       y = "Predicted Y by LASSO model")
-
+       y = "Predicted Y by LASSO model") +
+  geom_smooth(method='lm',formula = y ~ x,se = FALSE )
+ 
 
 ```
 
 
+**Answer** 
+
+The model predictions seems fairly good, because the point does not differ so much from the blue line.
+Perfect predictions, without any errors, would align the points precisely on the blue line.
 
 
 
