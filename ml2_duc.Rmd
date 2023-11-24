@@ -216,7 +216,7 @@ within-node deviance a node have to have compared to the root node to be able to
 split. By having a smaller number, the tree is allowed to split nodes with smaller 
 deviance, which in turns allows the tree to grow and have smaller nodes than before.
 
-Amongst tree a, b, and c the model b is best since it has lowest validation error
+Between tree a, b, and c the tree b is best since it has lowest validation error
 but also has the least amounts of leaves. By having less leaves the model is less
 complex and is easier to interpret.
 
@@ -284,7 +284,43 @@ good predictive power and which of the measures (accuracy or F1-score)
 should be preferred here. 
 
 
-**Answer:**
+**Answer:** The confusion matrix for the test data is presented in \@ref(tab:conf_mat).
+
+```{r conf_mat}
+# Prediction on test data
+pred_test <- predict(best_fit, newdata=test, type="class")
+table_test <- table(True=test$y, Predict=pred_test)
+# Confusion matrix
+table_test
+```
+
+From \@ref(tab:conf_mat) we can see that we have unbalanced data where "no" is the
+dominant class. The model is therefore better at prediction "no" compared to yes.
+The accuracy of the model is around 89.10%
+
+```{r}
+acc_test <- sum(diag(table_test)) / sum(table_test)
+acc_test
+```
+
+The F1-score the data is around 0.2246.
+
+```{r}
+# F1-score
+# True positive
+TP <- table_test[2,2]
+# false positve = We predict positive(yes) but real value is negative(no).
+FP <- table_test[1,2]
+# false negative = We predict negative(no) but real value is positive(yes)
+FN <- table_test[2,1]
+
+precision <- TP / (TP+FP)
+recall <- TP / (TP+FN)
+# F-score is between 0 and 1, where the closer to 1, the better. 
+f_score <- 2 * (precision*recall) / (precision + recall)
+f_score
+```
+
 
 ## 2.5
 

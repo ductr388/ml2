@@ -13,11 +13,8 @@ library(ggplot2)
 
 
 # 2.1                                               ####
-data <- read.csv2("bank-full.csv")
-# Change categorical variables to categorical
-index_cat <- c(2,3,4,5,7,8,9,10,11,16,17)
-data[ ,index_cat] <- lapply(data[ ,index_cat], as.factor)
-data <- data[,-12]
+# Index 12 is the variable duration
+data <- read.csv2("bank-full.csv", stringsAsFactors = TRUE)[, -12]
 
 n=dim(data)[1]
 set.seed(12345)
@@ -42,10 +39,10 @@ text(tree_a, pretty=0)
 # Default setting in tree if we don't specify any values for tree control?
 # Need to double check but looks the same. 
 tree_a <- tree(y ~., data=train, 
-               control=tree.control(nobs = nrow(train),
-                                    mincut = 5,
-                                    minsize = 10,
-                                    mindev = 0.01))
+               control=tree.control(nobs = nrow(train), # Observations in training set
+                                    mincut = 5,     # Min size for a leaf?
+                                    minsize = 10,   # Min size for a node
+                                    mindev = 0.01)) # max 10% misclassification
 plot(tree_a)
 text(tree_a, pretty=0)
 
@@ -122,7 +119,7 @@ which(min(testScore[2:50]) == testScore[2:50])+1
 plot(2:50, trainScore[2:50], type="b", col="red",ylim=c(4000,12000))
 points(2:50, testScore[2:50], type="b", col="blue")
 # Fill the point with the min value on validation
-points(22, testScore[29], pch=16, col="blue")
+points(22, testScore[22], pch=16, col="blue")
 
 best_fit <- prune.tree(fit, best=22)
 plot(best_fit)
@@ -159,26 +156,50 @@ f_score <- 2 * (precision*recall) / (precision + recall)
 f_score
 # 2.5                                               ####
 
-# This does not work to prune the tree afterwards?
-# Assuming the loss matrix should look like this:
-# TP  FP
-# FN  TN
-loss_mat <- matrix(c(0, 1, 5 ,0),ncol=2)
-loss_mat
-
-tree_loss <- prune.misclass(fit,loss=loss_mat,best=29)
-pred_loss <- predict(tree_loss, newdata=test, type="class")
-table_loss <- table(test$y, pred_loss)
-table_test
-table_loss
+# Predicts the probability of each class. 
+pred_best <- predict(best_fit, test, type="vector")
+prediction <- as.vector(ifelse(pred_best[,1]/pred_best[,2] > 5, "no", "yes"))
+table(test$y, prediction)
 
 # 2.6                                               ####
+d <- data.frame(TPR = 1, FPR = 1)
+roc_logistic <- d[FALSE, ]
+roc_tree <- d[FALSE, ]
+# Tree
+pred_best <- predict(best_fit, test, type="vector")
+probs <- seq(from=0.05, to=0.95, by=0.05)
+for(i in 1:length(probs)){
+  prediction <- ifelse(pred_best[,2] > probs[i], "yes", "no")
+  conf_mat <- table(test$y, prediction)
+  if(dim(conf_mat)[2] == 1){
+    TP <- 0
+    FP <- 0
+  } else {
+    TP <- conf_mat[2,2]
+    FP <- conf_mat[1,2]
+  }
+  TN <- conf_mat[1,1]
+  FN <- conf_mat[2,1]
+
+  
+  # TPR, true positive rate
+  roc_tree[i,1] <- TP / (TP+FN)
+  # FPR, false positive rate
+  roc_tree[i,2] <- FP / (FP+TN)
+}
+
+plot_data <- data.frame(roc_tree)
+ggplot(plot_data) +
+  geom_point(aes(x=FPR, y=TPR)) +
+  scale_x_continuous(limits=c(0,1)) +
+  geom_abline(intercept = 0, slope = 1) +
+  theme_bw()
 
 
 model_logistic <- glm(y~., family="binomial", train)
 pred_logistic <- predict(model_logistic, test, type="response")
 d <- data.frame(TPR = 1, FPR = 1)
-
+roc_logistic <- d[FALSE, ]
 probs <- seq(from=0.05, to=0.95, by=0.05)
 roc_logistic <- d[FALSE, ]
 
@@ -193,10 +214,11 @@ for(i in 1:length(probs)){
   # TPR, true positive rate
   roc_logistic[i,1] <- TP / (TP+FN)
   # FPR, false positive rate
-  roc_logistic[i,2] <- TN / (TN+FP)
+  roc_logistic[i,2] <- FP / (FP+TN)
 }
 plot_data <- data.frame(roc_logistic)
 ggplot(plot_data) +
   geom_point(aes(x=FPR, y=TPR)) +
   scale_x_continuous(limits=c(0,1)) +
+  geom_abline(intercept = 0, slope = 1) +
   theme_bw()
