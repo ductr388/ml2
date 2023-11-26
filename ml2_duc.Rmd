@@ -79,9 +79,9 @@ knitr::opts_chunk$set(
 # Assignment 2. Decision trees and logistic regression for bank marketing.
 
 The data in this assignment is related with direct marketing campaigns of a 
-Portuguese banking institution. Data consists of 21 variables, 20 are input variables
-about the clients and the output variable is if the client has a term deposit 
-(binary variable).
+Portuguese banking institution. Data consists of 21 variables, where 20 are input 
+variables about the clients and the output variable is if the client has a term 
+deposit (yes/no).
 
 ## 2.1
 
@@ -90,7 +90,7 @@ training/validation/test as 40/30/30: use data partitioning code specified in
 Lecture 2a.  
 
 **Answer:**
-Data is read into R, where all character variables are made into factor variables,
+Data was loaded into R, where all character variables were made into factor variables,
 and the variable duration was removed. 
 
 ```{r}
@@ -263,12 +263,12 @@ which(min(testScore[2:50]) == testScore[2:50])+1
 ```
 
 The dependence of deviances for training and validation data for different numbers
-of leaves is presented in figure \@ref(dependencePlot). 
+of leaves is presented in figure \@ref(fig:dependencePlot). 
 
 \clearpage
 
 
-```{r, echo=FALSE, fig.height=3, fig.width=5, fig.cap = "\\label{dependencePlot}Dependence of deviances for training- and testdata."}
+```{r, echo=FALSE, fig.height=3, fig.width=5, fig.cap = "\\label{fig:dependencePlot}Dependence of deviances for training- and testdata."}
 plot_data <- data.frame(training = trainScore[-1], test = testScore[-1])
 ggplot(plot_data, aes(x=2:50)) +
   geom_point(aes(y=training, color="training")) +
@@ -288,27 +288,27 @@ ggplot(plot_data, aes(x=2:50)) +
 # points(22, testScore[22], pch=16, col="blue")
 ```
 
-In figure \@ref(dependencePlot) the dashed line shows where the tree with the lowest
+In figure \@ref(fig:dependencePlot) the dashed line shows where the tree with the lowest
 deviance for testdata is located. For tree models, the complexity increases when the
 number of leaves increase. In terms of bias-variance tradeoff a model with low 
 complexity (few leaves) have high bias but low variance and is considered to be 
 underfitting. In contrast a model with high complexity have low bias but high variance
-and is considered to be overfitting. In figure \@ref(dependencePlot) the tree 
+and is considered to be overfitting. In figure \@ref(fig:dependencePlot) the tree 
 with 22 leaves (dashed line) is considered to be the tree where we have a 
 balance between low/high values for bias and variance which gives us that the 
 tree has the optimal fit since it is not underfitting or overfitting.
 
-The tree with 22 leaves is considered to be optimal and is presented in figure \@ref(bestTree).
+The tree with 22 leaves is considered to be optimal and is presented in figure \@ref(fig:bestTree).
 
 \clearpage
 
-```{r, fig.height=8, fig.width=10, fig.cap = "\\label{bestTree} Tree with 22 leaves."}
+```{r, fig.height=8, fig.width=10, fig.cap = "\\label{fig:bestTree} Tree with 22 leaves."}
 best_fit <- prune.tree(fit, best=22)
 plot(best_fit)
 text(best_fit, pretty=0)
 ```
 
-In figure \@ref(bestTree) most of the leaves have the prediction "no". The leaves
+In figure \@ref(fig:bestTree) most of the leaves have the prediction "no". The leaves
 with the predictions "yes" used the variables: poutcome, month, contact, pdays,
 and job. These 5 variables seems to be the most important for decision making for 
 this tree. The tree structure is presented in the following output:
@@ -331,7 +331,7 @@ good predictive power and which of the measures (accuracy or F1-score)
 should be preferred here. 
 
 
-<<<<<<< HEAD
+
 **Answer:** The confusion matrix is estimated for the test data and is presented
 in the following output:
 
@@ -344,7 +344,7 @@ conf_mat_tree
 
 ```
 
-The accuracy of the model is around 89%.
+The accuracy of the model on test data is around 89%.
 
 ```{r}
 # Accuracy
@@ -352,34 +352,12 @@ acc_test <- sum(diag(conf_mat_tree)) / sum(conf_mat_tree)
 acc_test
 ```
 
-The F1 score is around 0.22.
-=======
-**Answer:** The confusion matrix for the test data is presented in \@ref(tab:conf_mat).
+The F1-score test data is around 0.2246.
 
-```{r conf_mat}
-# Prediction on test data
-pred_test <- predict(best_fit, newdata=test, type="class")
-table_test <- table(True=test$y, Predict=pred_test)
-# Confusion matrix
-table_test
-```
-
-From \@ref(tab:conf_mat) we can see that we have unbalanced data where "no" is the
-dominant class. The model is therefore better at prediction "no" compared to yes.
-The accuracy of the model is around 89.10%
-
-```{r}
-acc_test <- sum(diag(table_test)) / sum(table_test)
-acc_test
-```
-
-The F1-score the data is around 0.2246.
->>>>>>> b8b6b4be5c1198f28947f72fdee8bb71a6e16b9e
 
 ```{r}
 # F1-score
 # True positive
-<<<<<<< HEAD
 tp <- conf_mat_tree[2,2]
 # False positive
 fp <- conf_mat_tree[1,2]
@@ -394,10 +372,9 @@ f1_score
 ```
 
 
-The accuracy of the model is around 89%, which looks high. But examining "yes",
-the model only predicted around 13.5% (214/(214+1371)) of these observations correctly. 
-Confusion matrix indicate that we have unbalanced data, which makes the
-model able to predict no (the dominant class) better than yes. 
+The accuracy of the model is around 89%, which looks high. But examining the class
+"yes", the model only predicted around 13.5% (214/(214+1371)) of "yes" observations as "yes. Confusion matrix indicate that we have unbalanced data, which makes the
+model able to predict "no" (the dominant class) better than "yes". 
 F1-score focuses more on the prediction "yes" compared to accuracy. In this case
 we have really unbalanced classes and F1-score is therefore a better measurement.
 F1-score is between 0 and 1, where the closer F1-score is to 1 the better. The model
@@ -405,21 +382,8 @@ has a F1-score of 0.22 and is not considered to have good predictive power.
 
 
 \clearpage
-=======
-TP <- table_test[2,2]
-# false positve = We predict positive(yes) but real value is negative(no).
-FP <- table_test[1,2]
-# false negative = We predict negative(no) but real value is positive(yes)
-FN <- table_test[2,1]
 
-precision <- TP / (TP+FP)
-recall <- TP / (TP+FN)
-# F-score is between 0 and 1, where the closer to 1, the better. 
-f_score <- 2 * (precision*recall) / (precision + recall)
-f_score
-```
 
->>>>>>> b8b6b4be5c1198f28947f72fdee8bb71a6e16b9e
 
 ## 2.5
 
@@ -432,8 +396,8 @@ L = _{Observed}
 \begin{array}{cc} Predicted \end{array}
 \\
 \begin{array}{cc}
-yes \\
-no \end{array}
+yes\\
+no\end{array}
 &
 \left(
 \begin{array}{cc}
@@ -445,12 +409,125 @@ no \end{array}
 and report the confusion matrix for the test data. Compare the results with
 the results from step 4 and discuss how the rates has changed and why.
 
-**Answer:**
+**Answer:** From the slides from the lectures we get the following from the 
+loss matrix:
+
+$E(y=no, \hat y = yes) = 1$  
+$E(y=yes, \hat y = no) = 5$  
+
+We can use this for classification of the model with:
+
+$\frac{p(y=no|x)}{p(y=yes|x)} > 5 \rightarrow \textit{classify as no}$.
+
+The code used in R for this is as follows:
+
+```{r}
+# Predicts the probability of each class. 
+pred_best <- predict(best_fit, test, type="vector")
+prediction <- as.vector(ifelse(pred_best[,1]/pred_best[,2] > 5, "no", "yes"))
+table(test$y, prediction)
+```
+
+Compared to the confusion matrix in 2.4, the model has now more predictions for 
+the class "yes". The loss matrix for the model now says that a wrong prediction
+on a class that is "yes" is 5 times more severe than a wrong prediction on a class
+that is "no". Before the model predicted "yes" was if the probability was above 50%,
+now the model predicts "yes" if the probability is above 16.7% (100/6).
+
 
 ## 2.6
 
-**Question:**
+**Question:** Use the optimal tree and a logistic regression model to classify the test data by
+using the following principle:
+$$\hat Y = \text{yes if } p(Y=\textit{'yes'|X)} > \pi, \text{otherwise } \hat Y = no$$
+where $\pi = 0.05, 0.1, 0.15,...,0.9, 0.95$. Compute the TPR and FPR values for the
+two models and plot the corresponding ROC curves. Conclusion? Why precision-recall 
+curve could be a better option here?
+
 **Answer:**
+True positive rate (TPR) and false positive rate (FPR) were calculated and the 
+ROC curves for tree and logistic regression model are presented in figure
+\@ref(fig:roc).
+
+
+```{r}
+# ROC for tree
+d <- data.frame(TPR = 1, FPR = 1)
+roc_logistic <- d[FALSE, ]
+roc_tree <- d[FALSE, ]
+
+pred_best <- predict(best_fit, test, type="vector")
+probs <- seq(from=0.05, to=0.95, by=0.05)
+for(i in 1:length(probs)){
+  prediction <- ifelse(pred_best[,2] > probs[i], "yes", "no")
+  conf_mat <- table(test$y, prediction)
+  if(dim(conf_mat)[2] == 1){
+    TP <- 0
+    FP <- 0
+  } else {
+    TP <- conf_mat[2,2]
+    FP <- conf_mat[1,2]
+  }
+  TN <- conf_mat[1,1]
+  FN <- conf_mat[2,1]
+  
+  # TPR, true positive rate
+  roc_tree[i,1] <- TP / (TP+FN)
+  # FPR, false positive rate
+  roc_tree[i,2] <- FP / (FP+TN)
+}
+plot_data <- data.frame(roc_tree)
+
+# ROC for logistic
+model_logistic <- glm(y~., family="binomial", train)
+pred_logistic <- predict(model_logistic, test, type="response")
+d <- data.frame(TPR = 1, FPR = 1)
+roc_logistic <- d[FALSE, ]
+probs <- seq(from=0.05, to=0.95, by=0.05)
+roc_logistic <- d[FALSE, ]
+
+for(i in 1:length(probs)){
+  pred <- ifelse(pred_logistic > probs[i], "yes", "no")
+  conf_mat <- table(test$y, pred)
+  TP <- conf_mat[2,2]
+  TN <- conf_mat[1,1]
+  FN <- conf_mat[2,1]
+  FP <- conf_mat[1,2]
+  
+  # TPR, true positive rate
+  roc_logistic[i,1] <- TP / (TP+FN)
+  # FPR, false positive rate
+  roc_logistic[i,2] <- FP / (FP+TN)
+}
+plot_data_logistic <- data.frame(roc_logistic)
+```
+
+\clearpage
+
+```{r, echo=FALSE, fig.cap = "\\label{fig:roc} Roc curves for tree and logistic model."}
+ggplot(plot_data) +
+  geom_line(aes(x=FPR, y=TPR, color="Tree")) +
+  geom_line(data=plot_data_logistic, aes(x=FPR, y=TPR, color="Logistic")) +
+  scale_x_continuous(limits=c(0,1)) +
+  geom_abline(intercept = 0, slope = 1) +
+  scale_color_manual(name="Model",
+                     values=c("indianred", "steelblue"),
+                     labels=c("Logistic", "Tree")) +
+  theme_bw() 
+
+```
+
+In figure \@ref(fig:roc) the black line represents the theoretical value for a random
+classifier. A model with a ROC curve further away from this line towards upper left
+part of the plot is considered better. The tree model is therefore considered to
+be better than the logistic model. 
+
+In precision-recall curve, recall is defined the same as TPR in ROC curve and precision
+is defined as:  
+$precision = \frac{TP}{TP+FP}$, where TP is true positive and FP is false positive. 
+Since we have unbalanced data, where the class "yes" is a lot smaller, a 
+precision-recall curve can give us better information on how well the models
+predicts the class "yes".
 
 
 

@@ -162,10 +162,12 @@ prediction <- as.vector(ifelse(pred_best[,1]/pred_best[,2] > 5, "no", "yes"))
 table(test$y, prediction)
 
 # 2.6                                               ####
+
+# ROC for tree
 d <- data.frame(TPR = 1, FPR = 1)
 roc_logistic <- d[FALSE, ]
 roc_tree <- d[FALSE, ]
-# Tree
+
 pred_best <- predict(best_fit, test, type="vector")
 probs <- seq(from=0.05, to=0.95, by=0.05)
 for(i in 1:length(probs)){
@@ -180,22 +182,15 @@ for(i in 1:length(probs)){
   }
   TN <- conf_mat[1,1]
   FN <- conf_mat[2,1]
-
   
   # TPR, true positive rate
   roc_tree[i,1] <- TP / (TP+FN)
   # FPR, false positive rate
   roc_tree[i,2] <- FP / (FP+TN)
 }
-
 plot_data <- data.frame(roc_tree)
-ggplot(plot_data) +
-  geom_point(aes(x=FPR, y=TPR)) +
-  scale_x_continuous(limits=c(0,1)) +
-  geom_abline(intercept = 0, slope = 1) +
-  theme_bw()
 
-
+# ROC for logistic
 model_logistic <- glm(y~., family="binomial", train)
 pred_logistic <- predict(model_logistic, test, type="response")
 d <- data.frame(TPR = 1, FPR = 1)
@@ -216,9 +211,17 @@ for(i in 1:length(probs)){
   # FPR, false positive rate
   roc_logistic[i,2] <- FP / (FP+TN)
 }
-plot_data <- data.frame(roc_logistic)
+plot_data_logistic <- data.frame(roc_logistic)
+
+
 ggplot(plot_data) +
-  geom_point(aes(x=FPR, y=TPR)) +
+  geom_line(aes(x=FPR, y=TPR, color="Tree")) +
+  geom_line(data=plot_data_logistic, aes(x=FPR, y=TPR, color="Logistic")) +
   scale_x_continuous(limits=c(0,1)) +
   geom_abline(intercept = 0, slope = 1) +
-  theme_bw()
+  scale_color_manual(name="Model",
+                     values=c("indianred", "steelblue"),
+                     labels=c("Logistic", "Tree")) +
+  theme_bw() 
+
+
