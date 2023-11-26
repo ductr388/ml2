@@ -79,7 +79,7 @@ knitr::opts_chunk$set(
 # Assignment 2. Decision trees and logistic regression for bank marketing.
 
 The data in this assignment is related with direct marketing campaigns of a 
-Portuguese banking institution. Data consists of 21 variables, 20 input variables
+Portuguese banking institution. Data consists of 21 variables, 20 are input variables
 about the clients and the output variable is if the client has a term deposit 
 (binary variable).
 
@@ -137,10 +137,9 @@ deviance and node size affected the size of the trees and explain why.
 **Answer:**
 
 The default setting in tree for smallest allowed node size is 10 and the default
-for minimum deviance is 0.01. The three different trees are fitted and in table 
-\@ref(tab:tree).
+for minimum deviance is 0.01. The three different trees were fitted and training error, validation error and number of leaves are presented in table \@ref(tab:tree).
 
-```{r tree, fig.height=4.5, fig.cap = "\\label{}Decision tree fitted with default settings."}
+```{r}
 # Tree a: default setting
 tree_a <- tree(y ~., data=train)
 # Misclassification for training data for tree a
@@ -190,7 +189,10 @@ miss_valid <- 1 - (sum(diag(table_valid)) / sum(table_valid))
 leaf <- sum(tree_c$frame$var == "<leaf>")
 # Misclassification for tree c
 model_c <- c(miss_train, miss_valid, leaf)
+```
 
+
+```{r tree, echo=FALSE, fig.cap = "\\label{}Decision tree fitted with default settings."}
 # Summarised results
 table <- data.frame(rbind(model_a, model_b, model_c))
 colnames(table) <- c("Training error", "Validation error", "Number of leaves")
@@ -198,7 +200,8 @@ rownames(table) <- c("Tree a: default setting", "Tree b: smallest node 7000",
                      "Tree c: min deviance 0.0005")
 
 kable(table, digits=6, booktabs=T,
-      caption="Misclassification error for the three trees on training and validation data.") 
+      caption="Misclassification error for the three trees on training and validation data.") %>%
+   kable_styling(latex_options = "HOLD_position")
 ```
 
 From table \@ref(tab:tree), the training error and validation error for tree a 
@@ -259,22 +262,66 @@ The tree with the lowest validation error had 22 leaves.
 which(min(testScore[2:50]) == testScore[2:50])+1
 ```
 
-A visual 
-```{r, fig.height=4.5, fig.width=6}
-plot(2:50, trainScore[2:50], type="b", col="red",ylim=c(8000,12000))
-points(2:50, testScore[2:50], type="b", col="blue")
-# Fill the point with the min value on validation
-points(22, testScore[22], pch=16, col="blue")
+The dependence of deviances for training and validation data for different numbers
+of leaves is presented in figure \@ref(dependencePlot). 
+
+\clearpage
+
+
+```{r, echo=FALSE, fig.height=3, fig.width=5, fig.cap = "\\label{dependencePlot}Dependence of deviances for training- and testdata."}
+plot_data <- data.frame(training = trainScore[-1], test = testScore[-1])
+ggplot(plot_data, aes(x=2:50)) +
+  geom_point(aes(y=training, color="training")) +
+  geom_point(aes(y=test, color="test")) +
+  geom_vline(xintercept=22, linetype="dashed") +
+  ylim(6000, 12000) +
+  labs(x="Number of leaves", y="Deviance") +
+  scale_colour_manual(name="Data", 
+                      values=c("indianred", "steelblue"),
+                      labels=c("Test", "Training")) +
+  theme_bw()
+
+# 
+# plot(2:50, trainScore[2:50], type="b", col="red",ylim=c(8000,12000))
+# points(2:50, testScore[2:50], type="b", col="blue")
+# # Fill the point with the min value on validation
+# points(22, testScore[22], pch=16, col="blue")
 ```
 
-Best tree
+In figure \@ref(dependencePlot) the dashed line shows where the tree with the lowest
+deviance for testdata is located. For tree models, the complexity increases when the
+number of leaves increase. In terms of bias-variance tradeoff a model with low 
+complexity (few leaves) have high bias but low variance and is considered to be 
+underfitting. In contrast a model with high complexity have low bias but high variance
+and is considered to be overfitting. In figure \@ref(dependencePlot) the tree 
+with 22 leaves (dashed line) is considered to be the tree where we have a 
+balance between low/high values for bias and variance which gives us that the 
+tree has the optimal fit since it is not underfitting or overfitting.
 
-```{r, fig.height=10, fig.width=10}
+The tree with 22 leaves is considered to be optimal and is presented in figure \@ref(bestTree).
+
+\clearpage
+
+```{r, fig.height=8, fig.width=10, fig.cap = "\\label{bestTree} Tree with 22 leaves."}
 best_fit <- prune.tree(fit, best=22)
 plot(best_fit)
 text(best_fit, pretty=0)
 ```
 
+In figure \@ref(bestTree) most of the leaves have the prediction "no". The leaves
+with the predictions "yes" used the variables: poutcome, month, contact, pdays,
+and job. These 5 variables seems to be the most important for decision making for 
+this tree. The tree structure is presented in the following output:
+
+```{r}
+best_fit
+```
+
+
+From the output the four leaves that predicts "yes" have the probabilities between
+0.58969 and 0.76471.  
+**What more should we comment?** 
+\clearpage
 
 ## 2.4
 
@@ -284,11 +331,81 @@ good predictive power and which of the measures (accuracy or F1-score)
 should be preferred here. 
 
 
-**Answer:**
+**Answer:** The confusion matrix is estimated for the test data and is presented
+in the following output:
+
+
+```{r, confMatTree}
+# Confusion matrix
+pred_test <- predict(best_fit, newdata=test, type="class")
+conf_mat_tree <- table(True = test$y, Predicton = pred_test)
+conf_mat_tree
+
+```
+
+The accuracy of the model is around 89%.
+
+```{r}
+# Accuracy
+acc_test <- sum(diag(conf_mat_tree)) / sum(conf_mat_tree)
+acc_test
+```
+
+The F1 score is around 0.22.
+
+```{r}
+# F1-score
+# True positive
+tp <- conf_mat_tree[2,2]
+# False positive
+fp <- conf_mat_tree[1,2]
+# False negative
+fn <- conf_mat_tree[2,1]
+
+precision <- tp / (tp+fp)
+recall <- tp / (tp+fn)
+# F-score is between 0 and 1, where the closer to 1, the better. 
+f1_score <- 2 * (precision*recall) / (precision + recall)
+f1_score
+```
+
+
+The accuracy of the model is around 89%, which looks high. But examining "yes",
+the model only predicted around 13.5% (214/(214+1371)) of these observations correctly. 
+Confusion matrix indicate that we have unbalanced data, which makes the
+model able to predict no (the dominant class) better than yes. 
+F1-score focuses more on the prediction "yes" compared to accuracy. In this case
+we have really unbalanced classes and F1-score is therefore a better measurement.
+F1-score is between 0 and 1, where the closer F1-score is to 1 the better. The model
+has a F1-score of 0.22 and is not considered to have good predictive power.
+
+
+\clearpage
 
 ## 2.5
 
-**Question:**
+**Question:** Perform a decision tree classification of the test data with the following loss matrix, 
+
+<div class="math">
+\[
+L = _{Observed}
+\begin{array}{cc} &
+\begin{array}{cc} Predicted \end{array}
+\\
+\begin{array}{cc}
+yes \\
+no \end{array}
+&
+\left(
+\begin{array}{cc}
+0 & 5 \\
+1 & 0 \end{array}
+\right)\end{array}
+\]
+</div>
+and report the confusion matrix for the test data. Compare the results with
+the results from step 4 and discuss how the rates has changed and why.
+
 **Answer:**
 
 ## 2.6
