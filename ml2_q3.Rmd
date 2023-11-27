@@ -1,0 +1,212 @@
+---
+title: "Machine Learning Question 3"
+author: "Simge Cinar"
+date: "2023-11-21"
+output:
+  pdf_document: 
+    latex_engine: xelatex
+    fig_width: 5.5
+    fig_height: 3.5
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(caret)
+library(ggplot2)
+```
+
+# Question 3: Principal Components and Implicit Regularization
+The data file communities.csv contains the results of studies of the crime level in the united states based on various characteristics of the given location. The main variable that is studied is ViolentCrimesPerPop which represents the total number of violent crimes per 100K population. The meaning of other variables can be found at: https://archive.ics.uci.edu/ml/datasets/Communities+and+Crime
+
+```{r}
+df3 <- read.csv("communities.csv")
+```
+
+### part 1)
+**Question:** Scale all variables except for ViolentCrimesPerPop and implement PCA by using function eigen(). Report how many components are needed to obtain at least 95% of variance in the data. What is the proportion of variation explained by each of the first two principal components? \
+**Answer:**
+```{r}
+# Scale the data expect for the predictor column
+scaler <- preProcess(df3[, -which(names(df3) == "ViolentCrimesPerPop")])
+df3_S <- predict(scaler, df3)
+```
+
+```{r}
+# Implement PCA
+X <- as.matrix(df3_S)
+n <- nrow(df3_S)
+S <- (t(X) %*% X) / n
+eigenval <- eigen(S)$values
+
+sorted_proportions <- sort(eigenval / sum(eigenval), decreasing = TRUE)
+variance_explained <- cumsum(sorted_proportions) / sum(sorted_proportions)
+
+cat("Number of components to explain 95% variance:", which(variance_explained >= 0.95)[1], "\n",
+    "Proportion of variation explained by PC1:",sorted_proportions[1], "\n", 
+    "Proportion of variation explained by PC2:",sorted_proportions[2], "\n")
+```
+
+### part 2)
+**Question:** Repeat PCA analysis by using princomp() function and make the trace plot of the first principle component. Do many features have a notable contribution to this component? Report which 5 features contribute mostly (by the absolute value) to the first principle component. Comment whether these feature have anything in common and whether they may have a logical relationship to the crime level. Also provide a plot of the PC scores in the coordinates (PC1, PC2) in which the color of the points is given by ViolentCrimesPerPop. Analyse this plot (hint: use ggplot2 package)
+
+**Answer:**
+Trace plot of the first principle component can be seen below. Many features have a notable contribution since this component captures the most variance in the data.
+```{r, fig.align='center'}
+pca_result <- princomp(df3_S)
+pc1 <- pca_result$scores[,1]
+plot(pc1, main = 'Traceplot, PC1')
+```
+
+```{r}
+loadings_pc1 <- pca_result$loadings[, 1]
+top_5_features_pc1 <- names(sort(abs(loadings_pc1), decreasing = TRUE))[1:5]
+cat("The top 5 features contribute mostly by the absolute value in PC1: \n",
+    top_5_features_pc1[1], "\n",
+    top_5_features_pc1[2], "\n",
+    top_5_features_pc1[3], "\n",
+    top_5_features_pc1[4], "\n",
+    top_5_features_pc1[5], "\n")
+```
+The meanings of the variables are as follows: \
+
+\begin{itemize}
+  \item ViolentCrimesPerPop: total number of violent crimes per 100K popuation (numeric - decimal) 
+  \item medFamInc: median family income (differs from household income for non-family households) (numeric - decimal)   \item medIncome: median household income (numeric - decimal) 
+  \item PctKids2Par: percentage of kids in family housing with two parents (numeric - decimal) 
+  \item pctWInvInc: percentage of households with investment / rent income in 1989 (numeric - decimal) 
+  \item PctPopUnderPov: percentage of people under the poverty level (numeric - decimal) 
+\end{itemize}
+
+"medFamInc", "medIncome", "PctPopUnderPov" and "pctWInvInc" might be correlated. "medFamInc", "medIncome", " PctKids2Par", "pctWInvInc" have a negative, "PctPopUnderPov" has a positive correlation with "ViolentCrimesPerPop".
+
+```{r}
+# DELETE
+loadings_pc2 <- pca_result$loadings[, 2]
+top_5_features_pc2 <- names(sort(abs(loadings_pc2), decreasing = TRUE))[1:5]
+cat("The top 5 features contribute mostly by the absolute value in PC2: \n",
+    top_5_features_pc2[1], "\n",
+    top_5_features_pc2[2], "\n",
+    top_5_features_pc2[3], "\n",
+    top_5_features_pc2[4], "\n",
+    top_5_features_pc2[5], "\n")
+```
+
+```{r, fig.align='center'}
+pc_scores <- as.data.frame(pca_result$scores[, 1:2])
+pc_scores$ViolentCrimesPerPop <- df3_S$ViolentCrimesPerPop
+
+ggplot(pc_scores, aes(x = -Comp.1, y = -Comp.2, color = ViolentCrimesPerPop)) +
+  geom_point() +
+  labs(x = "PC1", y = "PC2", color = "ViolentCrimesPerPop") +
+  ggtitle("PC1 vs. PC2")
+```
+
+Plot of the PC scores in the coordinates (PC1, PC2) can be seen above. The sign or direction of the principal components in the PCA is arbitrary because it only cares about capturing the maximum variance in the data hence signs of the principal components are flipped to interpret the results in a more meaningful way. 
+
+4 variables of out 5 that contribute mostly to the PC1 has negative correlation with the predictor variable. It can observed that ViolentCrimesPerPop is highest (almost 1) when PC1 is negative. PC2 is about immigration rates and from the graph it can be observed that ViolentCrimesPerPop is almost zero when PC2 is low. Whereas it should be noted that PC1 is more dominant which means even though the immigration rate is high, high income decreases ViolentCrimesPerPop.
+
+
+### part 3)
+**Question:** Split the original data into training and test (50/50) and scale both features and response appropriately, and estimate a linear regression model from training data in which ViolentCrimesPerPop is target and all other data columns are features. Compute training and test errors for these data and comment on the quality of the model. 
+
+**Answer:** 
+```{r}
+library(caret)
+# Split the data
+n <- dim(df3)[1]
+set.seed(12345)
+id <- sample(1:n, floor(n*0.5))
+train_data <- df3[id,]
+test_data <- df3[-id,]
+
+# Scale the data
+scaler <- preProcess(train_data)
+trainS <- predict(scaler, train_data)
+testS <- predict(scaler, test_data)
+```
+
+```{r}
+# Fit the lm model
+lm_model <- lm(ViolentCrimesPerPop ~ ., data = trainS)
+
+# Predictions on the train & test data
+predictor_cols <- setdiff(names(train_data), "ViolentCrimesPerPop")
+trainS_x <- trainS[, predictor_cols]
+testS_x <- testS[, predictor_cols]
+y_train <- trainS$ViolentCrimesPerPop
+y_test <- testS$ViolentCrimesPerPop
+
+predS_train <- predict(lm_model, newdata = trainS_x)
+predS_test <- predict(lm_model, newdata = testS_x)
+
+mse_train <- mean((y_train - predS_train)^2)
+mse_test <- mean((y_test - predS_test)^2)
+
+cat("Mean Squared Error (MSE) on the training data:", mse_train, "\n")
+cat("Mean Squared Error (MSE) on the test data:", mse_test, "\n")
+```
+
+By looking at the graph below, it can be observed that the quality of the model is not good. The mean of the scaled predictor variable on the test data is -0.01699304 and MSE on the test data is 0.3595838. MSE is quite high, approximately 21 times of the mean of the predictor variable.
+
+```{r, fig.align='center'}
+library(ggplot2)
+data <- data.frame(Actual = y_test, Predicted = predS_test)
+ggplot(data, aes(x = Actual, y = Predicted)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") + 
+  labs(x = "Actual Values", y = "Predicted Values") +
+  ggtitle("Actual vs. Predicted Values")
+```
+
+### part 4)
+**Question:** Implement a function that depends on parameter vector $\theta$ and represents the cost function for linear regression without intercept on the training data set. Afterwards, use BFGS (optim() function without gradient specified) to optimize cost with starting point $\theta^0 = 0$ and compute training and test errors for every iteration number. Present a plot showing dependence of both errors on the iteration number and comment which iteration number is optimal according tho the early stopping criterion. Compute the training and test error in the optimal model, compare them with results in step 3 and make conclusions.
+
+**Answer:**
+```{r}
+train_mse <- list() 
+Params <- list() 
+test_mse <- list()
+k <- 0
+cost_function <- function(theta){
+  y_hat_train <- as.matrix(trainS_x) %*% as.matrix(theta)
+  f <- mean((y_train - y_hat_train)^2)
+  k <<- k+1 
+  train_mse[[k]] <<- f 
+  Params[[k]] <<- theta 
+  
+  y_hat_test <- as.matrix(testS_x) %*% as.matrix(theta)
+  test_mse[[k]] <<- mean((y_test - y_hat_test)^2)
+  return(f)
+}
+
+theta_init <- c(rep(0, ncol(trainS_x)))
+result <- optim(theta_init, fn=cost_function, method="BFGS")
+```
+
+```{r, fig.align='center'}
+mse_val_train <- train_mse[1:length(train_mse)]
+iter <- seq(1,length(train_mse))
+plot(iter, mse_val_train, main = "MSE plot on the training set", xlab = "iteration", 
+     ylab = "MSE", ylim = c(0,1), xaxt="n")
+axis(1, at = seq(500, 20000, by = 1000), las=2)
+grid()
+```
+Approximately 1500 iteration is optimal according tho the early stopping criterion. After 1500, there is no significant decrease in the MSE.
+
+```{r, fig.align='center'}
+mse_val_test <- test_mse[1:length(test_mse)]
+iter <- seq(1,length(test_mse))
+plot(iter, mse_val_test, main = "MSE plot on the test set",  xlab = "iteration", 
+     ylab = "MSE", ylim = c(0,1), xaxt="n")
+axis(1, at = seq(500, 20000, by = 1000), las=2)
+grid()
+```
+
+```{r}
+# Get the results from early stopping condition
+cat("MSE on the training data:", train_mse[[1500]], "\n")
+cat("MSE on the test data:", test_mse[[1500]],  "\n")
+```
+
+The MSE on the test data with the parameters at iteration 1500 is 0.3713876, it is slightly high compared to step 3. Finding the optimal parameters with BFGS method did not give a better result and it is not efficient. For the linear regression, we have a closed formula to find the optimal parameters hence this method is not a good approach. 
