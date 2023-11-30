@@ -160,7 +160,7 @@ Comment on the quality of fit and prediction and therefore on the quality of mod
 **Answer:** 
 
 The MSE for the training data is very low, 0.0057 and for the test data the MSE is high, approximately
-722. This means that the model is very overfitted from the training data and therefor the quality for the model is bad. This is expected, due to $n$  (107) is almost equal to $p$ (100).
+722. This means that the model is very overfitted from the training data and therefor the quality for the model is bad. This is expected, due to $n$ (observations)  (107) is almost equal to $p$ (features) (100).
 
 
 
@@ -175,7 +175,7 @@ Assume now that Fat can be modeled as a LASSO regression in which all Channels a
 
 Cost function:
 
-$$\hat{\theta}^{lasso} = argmin \left\{ \frac{1}{n} \sum_{i=1}^n(y_i - \theta_0 - \theta_1x_{1i}-...-\theta_{100}x_{100i})^2 + \lambda + \sum_{j=1}^p|\theta_j| \right\}$$
+$$\hat{\theta}^{lasso} = argmin \left\{ \frac{1}{n} \sum_{i=1}^n(y_i - \theta_0 - \theta_1x_{1i}-...-\theta_{100}x_{100i})^2 + \lambda  \sum_{j=1}^p|\theta_j| \right\}$$
 
 * $n$ is the number of observations
 
@@ -202,7 +202,9 @@ Fit the LASSO regression model to the training data. Present a plot illustrating
 **Answer:** 
 
 
-```{r}
+```{r, echo=FALSE, fig.height=3, fig.width=5, fig.cap = "\\label{fig:lasso}LASSO: regression coefficients depend on the log of penalty factor"}
+
+
 library(caret)
 library(glmnet)
 
@@ -232,7 +234,7 @@ plot(model_lasso, xvar="lambda", label=TRUE)
 
 ```
 
-In figure X, the penalty factor $log(\lambda)$ and the coefficients for the features are plotted.
+In figure 1, the penalty factor $log(\lambda)$ and the coefficients for the features are plotted.
 As $log(\lambda)$ gets higher the more coefficients reach to zero.
 If the penalty factor $log(\lambda)$ is higher than 0, then the model select only one feature.
 If we want to select a model with only three features, then we would have a $log(\lambda)$ equal to around -0.3, then the $\lambda$ value would be $exp(-0.3) = 0.74$.
@@ -249,7 +251,7 @@ Repeat step 3 but fit Ridge instead of the LASSO regression and compare the plot
 **Answer:** 
 
 
-```{r}
+```{r, echo=FALSE, fig.height=3, fig.width=5, fig.cap = "\\label{fig:lasso}Ridge: regression coefficients depend on the log of penalty factor"}
 
 
 model_ridge <- glmnet(as.matrix(covariates), response, alpha = 0,
@@ -258,9 +260,8 @@ model_ridge <- glmnet(as.matrix(covariates), response, alpha = 0,
 plot(model_ridge, xvar="lambda", label=TRUE)
 
 ```
-In this plot none of the coefficients reach to zero, but all coefficients instead converge 
-to zero. In figure X, the LASSO do feature selection depending on the the $log(\lambda)$, however in this figure with Ridge it does not do feature selection.
 
+When comparing this plot with the plot from step 3, none of the coefficients from the ridge features reach to zero, as it does in LASSO. Instead, the coefficients from the ridge converge to zero.
 
 
 
