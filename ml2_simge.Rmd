@@ -23,13 +23,14 @@ The data file communities.csv contains the results of studies of the crime level
 df3 <- read.csv("communities.csv")
 ```
 
-### part 1)
+## part 1)
 **Question:** Scale all variables except for ViolentCrimesPerPop and implement PCA by using function eigen(). Report how many components are needed to obtain at least 95% of variance in the data. What is the proportion of variation explained by each of the first two principal components? \
 **Answer:**
 ```{r}
 # Scale the data expect for the predictor column
 scaler <- preProcess(df3[, -which(names(df3) == "ViolentCrimesPerPop")])
 df3_S <- predict(scaler, df3)
+cat("row number:", dim(df3)[1], ", column number:", dim(df3)[2]) 
 ```
 
 ```{r}
@@ -47,7 +48,9 @@ cat("Number of components to explain 95% variance:", which(variance_explained >=
     "Proportion of variation explained by PC2:",sorted_proportions[2], "\n")
 ```
 
-### part 2)
+35 components are need to explain 95% variance. Proportion of the variance explained by first and second principal component are 0.250108 and 0.1692125 relatively.
+
+## part 2)
 **Question:** Repeat PCA analysis by using princomp() function and make the trace plot of the first principle component. Do many features have a notable contribution to this component? Report which 5 features contribute mostly (by the absolute value) to the first principle component. Comment whether these feature have anything in common and whether they may have a logical relationship to the crime level. Also provide a plot of the PC scores in the coordinates (PC1, PC2) in which the color of the points is given by ViolentCrimesPerPop. Analyse this plot (hint: use ggplot2 package)
 
 **Answer:**
@@ -72,16 +75,18 @@ The meanings of the variables are as follows: \
 
 \begin{itemize}
   \item ViolentCrimesPerPop: total number of violent crimes per 100K popuation (numeric - decimal) 
-  \item medFamInc: median family income (differs from household income for non-family households) (numeric - decimal)   \item medIncome: median household income (numeric - decimal) 
+  \item medFamInc: median family income (differs from household income for non-family households) (numeric - decimal)   
+  \item medIncome: median household income (numeric - decimal) 
   \item PctKids2Par: percentage of kids in family housing with two parents (numeric - decimal) 
   \item pctWInvInc: percentage of households with investment / rent income in 1989 (numeric - decimal) 
   \item PctPopUnderPov: percentage of people under the poverty level (numeric - decimal) 
 \end{itemize}
 
-"medFamInc", "medIncome", "PctPopUnderPov" and "pctWInvInc" might be correlated. "medFamInc", "medIncome", " PctKids2Par", "pctWInvInc" have a negative, "PctPopUnderPov" has a positive correlation with "ViolentCrimesPerPop".
+"PctPopUnderPov" and "medIncome" might be highly correlated because poverty level is generally related to income. Also percentage of kids in family housing with two parents (PctKids2Par) might be highly correlated to "medIncome" as well because if two of the parents are working, it might increase the median income. Almost all of the variables are about the economic status of the region and there's a high possibility that these predictor variables are correlated to each other.
+
+"medFamInc", "medIncome", " PctKids2Par", "pctWInvInc" have a negative, "PctPopUnderPov" has a positive correlation with "ViolentCrimesPerPop". In general, it can be observed that as the income level increases, crime rate decreases.
 
 ```{r}
-# DELETE
 loadings_pc2 <- pca_result$loadings[, 2]
 top_5_features_pc2 <- names(sort(abs(loadings_pc2), decreasing = TRUE))[1:5]
 cat("The top 5 features contribute mostly by the absolute value in PC2: \n",
@@ -104,10 +109,10 @@ ggplot(pc_scores, aes(x = -Comp.1, y = -Comp.2, color = ViolentCrimesPerPop)) +
 
 Plot of the PC scores in the coordinates (PC1, PC2) can be seen above. The sign or direction of the principal components in the PCA is arbitrary because it only cares about capturing the maximum variance in the data hence signs of the principal components are flipped to interpret the results in a more meaningful way. 
 
-4 variables of out 5 that contribute mostly to the PC1 has negative correlation with the predictor variable. It can observed that ViolentCrimesPerPop is highest (almost 1) when PC1 is negative. PC2 is about immigration rates and from the graph it can be observed that ViolentCrimesPerPop is almost zero when PC2 is low. Whereas it should be noted that PC1 is more dominant which means even though the immigration rate is high, high income decreases ViolentCrimesPerPop.
+4 variables of out 5 that contribute mostly to the PC1 has negative correlation with the target variable "ViolentCrimesPerPop". PC1 is related to economic status of the region and it can observed that ViolentCrimesPerPop is highest (almost 1) when PC1 is low. PC2 is about immigration rates and from the graph it can be observed that" ViolentCrimesPerPop" is almost zero when PC2 is low but there are points where "ViolentCrimesPerPop" is low even though PC2 is high and these points are in the region where PC1 is positive. It can be observed that PC1 is more dominant which means despite the high immigration rate is high, crime rate is low in the states where income is high.
 
 
-### part 3)
+## part 3)
 **Question:** Split the original data into training and test (50/50) and scale both features and response appropriately, and estimate a linear regression model from training data in which ViolentCrimesPerPop is target and all other data columns are features. Compute training and test errors for these data and comment on the quality of the model. 
 
 **Answer:** 
@@ -147,7 +152,7 @@ cat("Mean Squared Error (MSE) on the training data:", mse_train, "\n")
 cat("Mean Squared Error (MSE) on the test data:", mse_test, "\n")
 ```
 
-By looking at the graph below, it can be observed that the quality of the model is not good. The mean of the scaled predictor variable on the test data is -0.01699304 and MSE on the test data is 0.3595838. MSE is quite high, approximately 21 times of the mean of the predictor variable.
+By looking at the graph below, it can be observed that the quality of the model is not good. The mean of the scaled predictor variable on the test data is -0.01699304 and MSE on the test data is 0.4248011. MSE is quite high, approximately 25 times of the mean of the predictor variable.
 
 ```{r, fig.align='center'}
 library(ggplot2)
@@ -159,7 +164,7 @@ ggplot(data, aes(x = Actual, y = Predicted)) +
   ggtitle("Actual vs. Predicted Values")
 ```
 
-### part 4)
+## part 4)
 **Question:** Implement a function that depends on parameter vector $\theta$ and represents the cost function for linear regression without intercept on the training data set. Afterwards, use BFGS (optim() function without gradient specified) to optimize cost with starting point $\theta^0 = 0$ and compute training and test errors for every iteration number. Present a plot showing dependence of both errors on the iteration number and comment which iteration number is optimal according tho the early stopping criterion. Compute the training and test error in the optimal model, compare them with results in step 3 and make conclusions.
 
 **Answer:**
@@ -209,4 +214,4 @@ cat("MSE on the training data:", train_mse[[1500]], "\n")
 cat("MSE on the test data:", test_mse[[1500]],  "\n")
 ```
 
-The MSE on the test data with the parameters at iteration 1500 is 0.3713876, it is slightly high compared to step 3. Finding the optimal parameters with BFGS method did not give a better result and it is not efficient. For the linear regression, we have a closed formula to find the optimal parameters hence this method is not a good approach. 
+The MSE on the test data with the parameters at iteration 1500 is 0.4611746, it is slightly high compared to step 3. Finding the optimal parameters with BFGS method did not give a better result. For the linear regression, there is a closed formula to find the optimal parameters which is $\hat{\theta} = (X^TX)^{-1}X^Ty$ hence solving this problem with this approach is not efficient. Finding the optimal parameters iteratively is generally being used in the problems where cost function is nonlinear.
