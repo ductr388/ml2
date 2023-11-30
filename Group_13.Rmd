@@ -505,20 +505,20 @@ fit <- tree(y ~., data=train,
             control=tree.control(nobs = nrow(train),
                                  mindev = 0.0005))
 trainScore=rep(0,50)
-testScore=rep(0,50)
+validScore=rep(0,50)
 for(i in 2:50){
   prunedTree=prune.tree(fit,best=i)
   pred=predict(prunedTree, newdata=valid,
                type="tree")
   trainScore[i]=deviance(prunedTree)
-  testScore[i]=deviance(pred)
+  validScore[i]=deviance(pred)
 }
 ```
 
 The tree with the lowest validation error had 22 leaves.
 ```{r}
 # Finds min, add +1 since index 1 is tree with 2 leaves.
-which(min(testScore[2:50]) == testScore[2:50])+1
+which(min(validScore[2:50]) == validScore[2:50])+1
 ```
 
 The dependence of deviances for training and validation data for different numbers
@@ -528,23 +528,19 @@ of leaves is presented in figure \@ref(fig:dependencePlot).
 
 
 ```{r, echo=FALSE, fig.height=3, fig.width=5, fig.cap = "\\label{fig:dependencePlot}Dependence of deviances for training- and testdata."}
-plot_data <- data.frame(training = trainScore[-1], test = testScore[-1])
+plot_data <- data.frame(training = trainScore[-1], valid = validScore[-1])
 ggplot(plot_data, aes(x=2:50)) +
   geom_point(aes(y=training, color="training")) +
-  geom_point(aes(y=test, color="test")) +
+  geom_point(aes(y=valid, color="test")) +
   geom_vline(xintercept=22, linetype="dashed") +
   ylim(6000, 12000) +
   labs(x="Number of leaves", y="Deviance") +
   scale_colour_manual(name="Data", 
                       values=c("indianred", "steelblue"),
-                      labels=c("Test", "Training")) +
+                      labels=c("Validation", "Training")) +
   theme_bw()
 
-# 
-# plot(2:50, trainScore[2:50], type="b", col="red",ylim=c(8000,12000))
-# points(2:50, testScore[2:50], type="b", col="blue")
-# # Fill the point with the min value on validation
-# points(22, testScore[22], pch=16, col="blue")
+
 ```
 
 In figure \@ref(fig:dependencePlot) the dashed line shows where the tree with the lowest
@@ -552,7 +548,7 @@ deviance for testdata is located. For tree models, the complexity increases when
 number of leaves increase. In terms of bias-variance tradeoff a model with low 
 complexity (few leaves) have high bias but low variance and is considered to be 
 underfitting. In contrast a model with high complexity have low bias but high variance
-and is considered to be overfitting. In figure \@ref(fig:dependencePlot) the tree 
+and is considered to be overfitting. In figure \@ref(fig:dependencePlot), the tree 
 with 22 leaves (dashed line) is considered to be the tree where we have a 
 balance between low/high values for bias and variance which gives us that the 
 tree has the optimal fit since it is not underfitting or overfitting.
@@ -577,9 +573,12 @@ best_fit
 ```
 
 
-From the output the four leaves that predicts "yes" have the probabilities between
-0.58969 and 0.76471.  
-**What more should we comment?** 
+From the output the three leaves that predicts "yes" does it with the probabilities
+0.68421, 0.76471, and 0.67811(last row). In the second to last row, the leaf 
+predicts no with a probability of 50.7%. On the row starting with "291)", 
+we have that the model predicts no with 100% probability for 119 observations. 
+
+
 \clearpage
 
 ## Question 2.4
@@ -684,13 +683,13 @@ The code used in R for this is as follows:
 # Predicts the probability of each class. 
 pred_best <- predict(best_fit, test, type="vector")
 prediction <- as.vector(ifelse(pred_best[,1]/pred_best[,2] > 5, "no", "yes"))
-table(test$y, prediction)
+table(True = test$y, Prediction = prediction)
 ```
 
 Compared to the confusion matrix in 2.4, the model has now more predictions for 
 the class "yes". The loss matrix for the model now says that a wrong prediction
 on a class that is "yes" is 5 times more severe than a wrong prediction on a class
-that is "no". Before the model predicted "yes" was if the probability was above 50%,
+that is "no". Before the model predicted "yes" if the probability was above 50%,
 now the model predicts "yes" if the probability is above 16.7% (100/6).
 
 
@@ -787,7 +786,6 @@ $precision = \frac{TP}{TP+FP}$, where TP is true positive and FP is false positi
 Since we have unbalanced data, where the class "yes" is a lot smaller, a 
 precision-recall curve can give us better information on how well the models
 predicts the class "yes".
-
 
 
 \clearpage
